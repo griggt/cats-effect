@@ -16,7 +16,7 @@
 
 package cats.effect
 
-import cats._, implicits._
+import cats._
 import cats.data.Kleisli
 import cats.effect.concurrent.Deferred
 
@@ -33,6 +33,7 @@ import org.specs2.ScalaCheck
 import org.typelevel.discipline.specs2.mutable.Discipline
 
 import cats.effect.IO.effectForIO
+import cats.syntax.all._
 
 class ResourceSpec extends BaseSpec with ScalaCheck with Discipline {
   // We need this for testing laws: prop runs can interfere with each other
