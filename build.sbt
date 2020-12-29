@@ -31,7 +31,7 @@ val PrimaryOS = "ubuntu-latest"
 
 val ScalaJSJava = "adopt@1.8"
 
-ThisBuild / crossScalaVersions := Seq("0.25.0", "0.26.0-RC1", "2.12.12", "2.13.3")
+ThisBuild / crossScalaVersions := Seq("3.0.0-M1", "3.0.0-M2", "2.12.12", "2.13.3")
 
 ThisBuild / githubWorkflowTargetBranches := Seq("series/3.x")
 
@@ -97,9 +97,10 @@ Global / scmInfo := Some(
     url("https://github.com/typelevel/cats-effect"),
     "git@github.com:typelevel/cats-effect.git"))
 
-val CatsVersion = "2.2.0-RC2"
-val Specs2Version = "4.10.0"
-val DisciplineVersion = "1.1.0"
+val CatsVersion = "2.3.0"
+val Specs2Version = "4.10.5"
+val DisciplineVersion = "1.1.2"
+val ScalaCheckVersion = "1.15.1"
 
 addCommandAlias("ciJVM", "; project rootJVM; headerCheck; scalafmtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant")
 addCommandAlias("ciJS", "; project rootJS; headerCheck; scalafmtCheck; clean; testIfRelevant")
@@ -130,10 +131,9 @@ lazy val kernel = crossProject(JSPlatform, JVMPlatform).in(file("kernel"))
     name := "cats-effect-kernel",
 
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core"   % CatsVersion,
       "org.specs2"    %%% "specs2-core" % Specs2Version % Test))
   .settings(dottyLibrarySettings)
-  .settings(dottyJsSettings(ThisBuild / crossScalaVersions))
+  .settings(libraryDependencies += "org.typelevel" %%% "cats-core" % CatsVersion)
 
 /**
  * Reference implementations (including a pure ConcurrentBracket), generic ScalaCheck
@@ -143,13 +143,12 @@ lazy val testkit = crossProject(JSPlatform, JVMPlatform).in(file("testkit"))
   .dependsOn(kernel)
   .settings(
     name := "cats-effect-testkit",
-
+  )
+  .settings(
     libraryDependencies ++= Seq(
       "org.typelevel"  %%% "cats-free"  % CatsVersion,
-      "org.scalacheck" %%% "scalacheck" % "1.14.3"))
-  .settings(dottyLibrarySettings)
-  .settings(dottyJsSettings(ThisBuild / crossScalaVersions))
-  .settings(libraryDependencies += "com.codecommit" %%% "coop" % "0.7.0")
+      "org.scalacheck" %%% "scalacheck" % ScalaCheckVersion,
+      "org.typelevel" %%% "coop" % "1.0.0-M2"))
 
 /**
  * The laws which constrain the abstractions. This is split from kernel to avoid
@@ -162,12 +161,15 @@ lazy val laws = crossProject(JSPlatform, JVMPlatform).in(file("laws"))
     name := "cats-effect-laws",
 
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-laws" % CatsVersion,
-
-      "org.typelevel" %%% "discipline-specs2" % DisciplineVersion % Test,
-      "org.specs2"    %%% "specs2-scalacheck" % Specs2Version % Test))
+      "org.specs2"    %%% "specs2-scalacheck" % Specs2Version % Test exclude("org.scalacheck", "scalacheck_2.13")
+    ))
   .settings(dottyLibrarySettings)
-  .settings(dottyJsSettings(ThisBuild / crossScalaVersions))
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-laws" % CatsVersion,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineVersion % Test,
+    )
+  )
 
 /**
  * Concrete, production-grade implementations of the abstractions. Or, more
@@ -181,14 +183,17 @@ lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
     name := "cats-effect",
 
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "discipline-specs2" % DisciplineVersion % Test,
-      "org.specs2"    %%% "specs2-scalacheck" % Specs2Version     % Test,
-      "org.typelevel" %%% "cats-kernel-laws"  % CatsVersion       % Test))
+      "org.specs2"    %%% "specs2-scalacheck" % Specs2Version     % Test exclude("org.scalacheck", "scalacheck_2.13")
+    ))
   .jvmSettings(
     Test / fork := true,
     Test / javaOptions += s"-Dsbt.classpath=${(Test / fullClasspath).value.map(_.data.getAbsolutePath).mkString(File.pathSeparator)}")
   .settings(dottyLibrarySettings)
-  .settings(dottyJsSettings(ThisBuild / crossScalaVersions))
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "discipline-specs2" % DisciplineVersion % Test,
+      "org.typelevel" %%% "cats-kernel-laws"  % CatsVersion       % Test)
+  )
 
 /**
  * Implementations of concurrent data structures (Ref, MVar, etc) purely in
@@ -199,7 +204,7 @@ lazy val concurrent = crossProject(JSPlatform, JVMPlatform).in(file("concurrent"
   .settings(
     name := "cats-effect-concurrent",
     libraryDependencies ++= Seq(
-      "org.specs2"    %%% "specs2-scalacheck" % Specs2Version % Test
+      "org.specs2"    %%% "specs2-scalacheck" % Specs2Version % Test   exclude("org.scalacheck", "scalacheck_2.13")
     )
   )
   .settings(dottyLibrarySettings)
