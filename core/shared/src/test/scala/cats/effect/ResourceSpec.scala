@@ -32,6 +32,8 @@ import org.scalacheck.Prop, Prop.forAll
 import org.specs2.ScalaCheck
 import org.typelevel.discipline.specs2.mutable.Discipline
 
+import cats.effect.IO.effectForIO
+
 class ResourceSpec extends BaseSpec with ScalaCheck with Discipline {
   // We need this for testing laws: prop runs can interfere with each other
   sequential
