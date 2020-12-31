@@ -230,8 +230,8 @@ trait GenSpawn[F[_], E] extends MonadCancel[F, E] {
    *
    * @param fa the effect for the spawned fiber
    */
-  def background[A](fa: F[A]): Resource[F, F[Outcome[F, E, A]]] =
-    Resource.make(start(fa))(_.cancel)(this).map(_.join)
+  def background[A](fa: F[A]): Resource[F, F[Outcome[F, E, A]]] = ???
+    //Resource.make(start(fa))(_.cancel)(this).map(_.join)
 
   /**
    * A non-terminating effect that never completes, which causes a fiber to
