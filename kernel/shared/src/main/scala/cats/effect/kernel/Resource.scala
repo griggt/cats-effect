@@ -460,7 +460,7 @@ sealed abstract class Resource[F[_], +A] {
     }
 }
 
-object Resource extends ResourceFOInstances0 with ResourceHOInstances0 with ResourcePlatform {
+object Resource extends /*ResourceFOInstances0 with*/ ResourceHOInstances0 with ResourcePlatform {
 
   /**
    * Creates a resource from an allocating effect.
@@ -760,19 +760,19 @@ object Resource extends ResourceFOInstances0 with ResourceHOInstances0 with Reso
       }
   }
 
-  type Par[F[_], A] = ParallelF[Resource[F, *], A]
+  /*type Par[F[_], A] = ParallelF[Resource[F, *], A]
 
   implicit def parallelForResource[F[_]: Concurrent]: Parallel.Aux[Resource[F, *], Par[F, *]] =
-    spawn.parallelForGenSpawn[Resource[F, *], Throwable]
+    spawn.parallelForGenSpawn[Resource[F, *], Throwable]*/
 }
 
-private[effect] trait ResourceHOInstances0 extends ResourceHOInstances1 {
+private[effect] trait ResourceHOInstances0 extends ResourceHOInstances4 {
   implicit def catsEffectAsyncForResource[F[_]](implicit F0: Async[F]): Async[Resource[F, *]] =
     new ResourceAsync[F] {
       def F = F0
     }
 
-  implicit def catsEffectSemigroupKForResource[F[_], A](
+  /*implicit def catsEffectSemigroupKForResource[F[_], A](
       implicit F0: MonadCancel[F, Throwable],
       K0: SemigroupK[F],
       G0: Ref.Make[F]): ResourceSemigroupK[F] =
@@ -780,10 +780,10 @@ private[effect] trait ResourceHOInstances0 extends ResourceHOInstances1 {
       def F = F0
       def K = K0
       def G = G0
-    }
+    }*/
 }
 
-private[effect] trait ResourceHOInstances1 extends ResourceHOInstances2 {
+/*private[effect] trait ResourceHOInstances1 extends ResourceHOInstances2 {
   implicit def catsEffectTemporalForResource[F[_]](
       implicit F0: Temporal[F]): Temporal[Resource[F, *]] =
     new ResourceTemporal[F] {
@@ -820,7 +820,7 @@ private[effect] trait ResourceHOInstances3 extends ResourceHOInstances4 {
       def F = F0
       def rootCancelScope = F0.rootCancelScope
     }
-}
+}*/
 
 private[effect] trait ResourceHOInstances4 extends ResourceHOInstances5 {
   implicit def catsEffectMonadErrorForResource[F[_], E](
@@ -837,7 +837,7 @@ private[effect] trait ResourceHOInstances5 {
     }
 }
 
-abstract private[effect] class ResourceFOInstances0 extends ResourceFOInstances1 {
+/*abstract private[effect] class ResourceFOInstances0 extends ResourceFOInstances1 {
   implicit def catsEffectMonoidForResource[F[_], A](
       implicit F0: Monad[F],
       A0: Monoid[A]): Monoid[Resource[F, A]] =
@@ -855,7 +855,7 @@ abstract private[effect] class ResourceFOInstances1 {
       def A = A0
       def F = F0
     }
-}
+}*/
 
 // TODO the rest of the instances
 abstract private[effect] class ResourceMonadCancel[F[_]]
@@ -866,9 +866,9 @@ abstract private[effect] class ResourceMonadCancel[F[_]]
   def canceled: Resource[F, Unit] =
     Resource.eval(F.canceled)
 
-  def forceR[A, B](fa: Resource[F, A])(fb: Resource[F, B]): Resource[F, B] =
-    Resource.applyFull(
-      _(fa.use_ !> fb.allocated).map(_.map(fin => (_: Resource.ExitCase) => fin)))
+  def forceR[A, B](fa: Resource[F, A])(fb: Resource[F, B]): Resource[F, B] = ???
+    /*Resource.applyFull(
+      _(fa.use_ !> fb.allocated).map(_.map(fin => (_: Resource.ExitCase) => fin)))*/
 
   /*
    * The problem is the scoping. I really need to be able to wrap a scope around
@@ -877,13 +877,13 @@ abstract private[effect] class ResourceMonadCancel[F[_]]
    * themselves must be extended by flatMap, despite the closure of the onCancel
    * scope.
    */
-  def onCancel[A](fa: Resource[F, A], fin: Resource[F, Unit]): Resource[F, A] =
-    Resource applyFull { poll =>
+  def onCancel[A](fa: Resource[F, A], fin: Resource[F, Unit]): Resource[F, A] = ???
+    /*Resource applyFull { poll =>
       poll(fa.allocated).onCancel(fin.use_).map(_.map(fin => (_: Resource.ExitCase) => fin))
-    }
+    }*/
 
-  def uncancelable[A](body: Poll[Resource[F, *]] => Resource[F, A]): Resource[F, A] =
-    Resource applyFull { poll =>
+  def uncancelable[A](body: Poll[Resource[F, *]] => Resource[F, A]): Resource[F, A] = ???
+    /*Resource applyFull { poll =>
       val inner = new Poll[Resource[F, *]] {
         def apply[B](rfb: Resource[F, B]): Resource[F, B] =
           Resource.applyFull(
@@ -891,7 +891,7 @@ abstract private[effect] class ResourceMonadCancel[F[_]]
       }
 
       body(inner).allocated.map(_.map(fin => (_: Resource.ExitCase) => fin))
-    }
+    }*/
 }
 
 // note: Spawn alone isn't possible since we need Concurrent to implement start
@@ -915,7 +915,7 @@ abstract private[effect] class ResourceConcurrent[F[_]]
    * 4. If a fiber is canceled *after* it completes, we explicitly snag the finalizers and run them, setting the result to Canceled()
    *   a) Note that we are missing a check here! We need to disable this behavior if someone has already joined
    */
-  def start[A](fa: Resource[F, A]): Resource[F, Fiber[Resource[F, *], Throwable, A]] = {
+  def start[A](fa: Resource[F, A]): Resource[F, Fiber[Resource[F, *], Throwable, A]] = ??? /*{
     final case class State(
         fin: F[Unit] = F.unit,
         runOnComplete: Boolean = false,
@@ -993,7 +993,7 @@ abstract private[effect] class ResourceConcurrent[F[_]]
         }
       }
     }
-  }
+  }*/
 
   def deferred[A]: Resource[F, Deferred[Resource[F, *], A]] =
     Resource.eval(F.deferred[A]).map(_.mapK(Resource.liftK[F]))
@@ -1041,8 +1041,8 @@ abstract private[effect] class ResourceAsync[F[_]]
   override def never[A]: Resource[F, A] =
     Resource.eval(F.never[A])
 
-  def cont[K, R](body: Cont[Resource[F, *], K, R]): Resource[F, R] =
-    Resource applyFull { poll =>
+  def cont[K, R](body: Cont[Resource[F, *], K, R]): Resource[F, R] = ???
+    /*Resource applyFull { poll =>
       poll {
         F cont {
           new Cont[F, K, (R, Resource.ExitCase => F[Unit])] {
@@ -1072,12 +1072,12 @@ abstract private[effect] class ResourceAsync[F[_]]
           }
         }
       }
-    }
+    }*/
 
-  def evalOn[A](fa: Resource[F, A], ec: ExecutionContext): Resource[F, A] =
-    Resource applyFull { poll =>
+  def evalOn[A](fa: Resource[F, A], ec: ExecutionContext): Resource[F, A] = ???
+    /*Resource applyFull { poll =>
       poll(fa.allocated).evalOn(ec).map(_.map(fin => (_: Resource.ExitCase) => fin))
-    }
+    }*/
 
   def executionContext: Resource[F, ExecutionContext] =
     Resource.eval(F.executionContext)
