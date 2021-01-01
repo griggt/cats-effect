@@ -21,7 +21,6 @@ package kernel
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicReference}
 
 import cats.data.State
-import cats.effect.kernel.RefTG.TransformedRefTG
 import cats.instances.function._
 import cats.instances.tuple._
 import cats.syntax.bifunctor._
@@ -75,55 +74,6 @@ object RefTG {
 
   final class ApplyBuilders[F[_]](val mk: Make[F]) extends AnyVal {
     def of[A](a: A): F[RefTG[F, A]] = ???
-  }
-
-  final private class SyncRefTG[F[_], A](ar: AtomicReference[A])(implicit F: SyncTG[F]) extends RefTG[F, A] {
-    def get: F[A] = ???
-    def set(a: A): F[Unit] = ???
-    override def getAndSet(a: A): F[A] = ???
-    override def getAndUpdate(f: A => A): F[A] = ???
-    def access: F[(A, A => F[Boolean])] = ???
-    def tryUpdate(f: A => A): F[Boolean] = ???
-    def tryModify[B](f: A => (A, B)): F[Option[B]] = ???
-    def update(f: A => A): F[Unit] = ???
-    override def updateAndGet(f: A => A): F[A] = ???
-    def modify[B](f: A => (A, B)): F[B] = ???
-    def tryModifyState[B](state: State[A, B]): F[Option[B]] = ???
-    def modifyState[B](state: State[A, B]): F[B] = ???
-  }
-
-  final private[kernel] class TransformedRefTG[F[_], G[_], A](
-      underlying: RefTG[F, A],
-      trans: F ~> G)(
-      implicit F: Functor[F]
-  ) extends RefTG[G, A] {
-    override def get: G[A] = ???
-    override def set(a: A): G[Unit] = ???
-    override def getAndSet(a: A): G[A] = ???
-    override def tryUpdate(f: A => A): G[Boolean] = ???
-    override def tryModify[B](f: A => (A, B)): G[Option[B]] = ???
-    override def update(f: A => A): G[Unit] = ???
-    override def modify[B](f: A => (A, B)): G[B] = ???
-    override def tryModifyState[B](state: State[A, B]): G[Option[B]] = ???
-    override def modifyState[B](state: State[A, B]): G[B] = ???
-    override def access: G[(A, A => G[Boolean])] = ???
-  }
-
-  final private[kernel] class LensRefTG[F[_], A, B <: AnyRef](underlying: RefTG[F, A])(
-      lensGet: A => B,
-      lensSet: A => B => A
-  )(implicit F: SyncTG[F])
-      extends RefTG[F, B] {
-    override def get: F[B] = ???
-    override def set(b: B): F[Unit] = ???
-    override def getAndSet(b: B): F[B] = ???
-    override def update(f: B => B): F[Unit] = ???
-    override def modify[C](f: B => (B, C)): F[C] = ???
-    override def tryUpdate(f: B => B): F[Boolean] = ???
-    override def tryModify[C](f: B => (B, C)): F[Option[C]] = ???
-    override def tryModifyState[C](state: State[B, C]): F[Option[C]] = ???
-    override def modifyState[C](state: State[B, C]): F[C] = ???
-    override val access: F[(B, B => F[Boolean])] = ???
   }
 
   implicit def catsInvariantForRef[F[_]: Functor]: Invariant[RefTG[F, *]] = ???
