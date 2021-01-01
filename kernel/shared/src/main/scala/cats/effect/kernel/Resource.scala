@@ -37,7 +37,7 @@ class Resource[F[_], A] {
   implicit def catsEffectAsyncForResource[F[_]](implicit F0: AsyncTG[F]): AsyncTG[Resource[F, *]] = ???
 
   def parZip(implicit F: Concurrent[F]) = {
-    Ref.of /*[F, (F[Unit], F[Unit])]*/ (().pure[F] -> ().pure[F])
+    RefTG.of /*[F, (F[Unit], F[Unit])]*/ (().pure[F] -> ().pure[F])
 
     ()
   }
