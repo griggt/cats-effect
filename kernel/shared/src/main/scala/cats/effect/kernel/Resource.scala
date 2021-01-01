@@ -16,38 +16,13 @@
 
 package cats.effect.kernel
 
-//import cats._
+import cats.{Monoid, Semigroup}
 import cats.data.{EitherT, Ior, IorT, Kleisli, OptionT, WriterT}
-import cats.{~>, Monoid, Semigroup}
 import cats.syntax.all._
-//import cats.effect.kernel.implicits._
 
-import java.util.concurrent.CompletableFuture
-import scala.concurrent.{ExecutionContext, Future}
-import scala.annotation.tailrec
-
-private[kernel] trait AsyncPlatformTG[F[_]] { this: AsyncTG[F] =>
-  def fromCompletableFuture[A](fut: F[CompletableFuture[A]]): F[A] = ???
-}
-
-
-trait AsyncTG[F[_]] extends AsyncPlatformTG[F] with Sync[F] with Temporal[F] {
-  def async[A](k: (Either[Throwable, A] => Unit) => F[Option[F[Unit]]]): F[A] = ???
-  def async_[A](k: (Either[Throwable, A] => Unit) => Unit): F[A] = ???
-  def never[A]: F[A] = ???
-
-  def evalOn[A](fa: F[A], ec: ExecutionContext): F[A]
-  def executionContext: F[ExecutionContext]
-
-  def fromFuture[A](fut: F[Future[A]]): F[A] = ???
-
-  def cont[K, R](body: Cont[F, K, R]): F[R]
-}
+trait AsyncTG[F[_]] extends Sync[F]
 
 object AsyncTG {
-  def apply[F[_]](implicit F: AsyncTG[F]): F.type = F
-  def defaultCont[F[_], A](body: Cont[F, A, A])(implicit F: AsyncTG[F]): F[A] = ???
-
   implicit def asyncForOptionT[F[_]](implicit F0: AsyncTG[F]): AsyncTG[OptionT[F, *]] = ???
   implicit def asyncForEitherT[F[_], E](implicit F0: AsyncTG[F]): AsyncTG[EitherT[F, E, *]] = ???
   implicit def asyncForIorT[F[_], L](implicit F0: AsyncTG[F], L0: Semigroup[L]): AsyncTG[IorT[F, L, *]] = ???
