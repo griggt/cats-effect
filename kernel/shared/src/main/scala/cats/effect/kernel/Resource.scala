@@ -42,7 +42,17 @@ object AsyncTG {
   implicit def asyncForKleisli[F[_], R](implicit F0: AsyncTG[F]): AsyncTG[Kleisli[F, R, *]] = ???
 }
 
-trait GenConcurrentTG[F[_], E] extends GenSpawn[F, E]
+trait GenSpawnTG[F[_], E] extends MonadCancel[F, E]
+
+object GenSpawnTG {
+  implicit def genSpawnForOptionT[F[_], E](implicit F0: GenSpawnTG[F, E]): GenSpawnTG[OptionT[F, *], E] = ???
+  implicit def genSpawnForEitherT[F[_], E0, E](implicit F0: GenSpawnTG[F, E]): GenSpawnTG[EitherT[F, E0, *], E] = ???
+  implicit def genSpawnForKleisli[F[_], R, E](implicit F0: GenSpawnTG[F, E]): GenSpawnTG[Kleisli[F, R, *], E] = ???
+  implicit def genSpawnForIorT[F[_], L, E](implicit F0: GenSpawnTG[F, E], L0: Semigroup[L]): GenSpawnTG[IorT[F, L, *], E] = ???
+  implicit def genSpawnForWriterT[F[_], L, E](implicit F0: GenSpawnTG[F, E], L0: Monoid[L]): GenSpawnTG[WriterT[F, L, *], E] = ???
+}
+
+trait GenConcurrentTG[F[_], E] extends GenSpawnTG[F, E]
 
 object GenConcurrentTG {
   implicit def genConcurrentForOptionT[F[_], E](implicit F0: GenConcurrentTG[F, E]): GenConcurrentTG[OptionT[F, *], E] = ???
