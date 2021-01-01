@@ -42,6 +42,16 @@ object AsyncTG {
   implicit def asyncForKleisli[F[_], R](implicit F0: AsyncTG[F]): AsyncTG[Kleisli[F, R, *]] = ???
 }
 
+trait GenConcurrentTG[F[_], E] extends GenSpawn[F, E]
+
+object GenConcurrentTG {
+  implicit def genConcurrentForOptionT[F[_], E](implicit F0: GenConcurrentTG[F, E]): GenConcurrentTG[OptionT[F, *], E] = ???
+  implicit def genConcurrentForEitherT[F[_], E0, E](implicit F0: GenConcurrentTG[F, E]): GenConcurrentTG[EitherT[F, E0, *], E] = ???
+  implicit def genConcurrentForKleisli[F[_], R, E](implicit F0: GenConcurrentTG[F, E]): GenConcurrentTG[Kleisli[F, R, *], E] = ???
+  implicit def genConcurrentForIorT[F[_], L, E](implicit F0: GenConcurrentTG[F, E], L0: Semigroup[L]): GenConcurrentTG[IorT[F, L, *], E] = ???
+  implicit def genConcurrentForWriterT[F[_], L, E](implicit F0: GenConcurrentTG[F, E], L0: Monoid[L]): GenConcurrentTG[WriterT[F, L, *], E] = ???
+}
+
 abstract class RefTG[F[_], A]
 
 object RefTG {
@@ -49,7 +59,7 @@ object RefTG {
   object Make extends MakeInstances
 
   private[kernel] trait MakeInstances extends MakeLowPriorityInstances {
-    implicit def concurrentInstance[F[_]](implicit F: GenConcurrent[F, _]): Make[F] = ???
+    implicit def concurrentInstance[F[_]](implicit F: GenConcurrentTG[F, _]): Make[F] = ???
   }
 
   private[kernel] trait MakeLowPriorityInstances {
@@ -59,13 +69,14 @@ object RefTG {
   def of[F[_], A](a: A)(implicit mk: Make[F]): F[RefTG[F, A]] = ???
 }
 
+
 /***/
 
 class Resource[F[_], A] {
 
   implicit def catsEffectAsyncForResource[F[_]](implicit F0: AsyncTG[F]): AsyncTG[Resource[F, *]] = ???
 
-  def parZip(implicit F: Concurrent[F]) = {
+  def parZip(implicit F: GenConcurrentTG[F, Throwable]) = {
     RefTG.of /*[F, (F[Unit], F[Unit])]*/ (().pure[F] -> ().pure[F])
 
     ()
